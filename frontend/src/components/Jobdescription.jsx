@@ -28,7 +28,7 @@ const Jobdescription = () => {
       `${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/application/apply/${id}`, 
       { withCredentials: true }
     )
-    console.log(res.data)   // ab yaha JSON aayega
+     // ab yaha JSON aayega
     if (res.data.success) {
       setApplied(true)//updatee local state
       const updatesinglejob={...singlejob,applications:[...singlejob.applications,{applicant:user?._id}]}

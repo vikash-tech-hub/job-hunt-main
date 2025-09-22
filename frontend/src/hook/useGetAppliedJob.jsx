@@ -8,7 +8,6 @@ const useGetAppliedJob=()=>{
         const fetchAppliedJobs=async()=>{
             try {
                 const res=await axios.get(`${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/application/get`,{withCredentials:true})
-                console.log(res.data);
                 
                 if (res.data.success){
                     dispatch(setAllAppliedJob(res.data.application))
