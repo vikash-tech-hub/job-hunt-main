@@ -19,9 +19,7 @@ const Jobdescription = () => {
   const isintiallyapplied = singlejob?.applications?.some(application => application.applicant === user?._id) || false;
  const [isapplied ,setApplied]=useState(isintiallyapplied)
   const { id } = useParams();   // ✅ Correct way
-  console.log("ID from useParams:", id);
-  console.log("Final API URL:", `${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/job/get/${id}`);
-
+  
   const dispatch = useDispatch()
 
   const applyhandler = async () => {
