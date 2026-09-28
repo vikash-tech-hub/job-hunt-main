@@ -1,76 +1,113 @@
-import React from 'react'
-import { Button } from './ui/button'
-import { Bookmark } from 'lucide-react'
-import { Badge } from './ui/badge'
+import React, { useState } from 'react';
+import { Button } from './ui/button';
+import { Bookmark, MapPin, Clock, ArrowUpRight } from 'lucide-react';
+import { Badge } from './ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
-import { Avatar, AvatarImage } from './ui/avatar'
-import { useNavigate } from 'react-router-dom'
+const Job = ({ job }) => {
+    const navigate = useNavigate();
+    const [isSaved, setIsSaved] = useState(false);
 
-const job = ({ job }) => {
-    const navigate = useNavigate()
-    // const jobid = 'jknksk'
-    const daysagofunction = (mongodbTime) => {
-        const createdAt = new Date(mongodbTime)
-        const currentTime = new Date()
-        const timeDifference = currentTime - createdAt
-        return Math.floor(timeDifference / (1000 * 24 * 60 * 60))
-    }
+    const daysAgoFunction = (mongodbTime) => {
+        if (!mongodbTime) return "Recently";
+        const createdAt = new Date(mongodbTime);
+        const currentTime = new Date();
+        const timeDifference = currentTime - createdAt;
+        const days = Math.floor(timeDifference / (1000 * 24 * 60 * 60));
+        if (days === 0) return "Today";
+        if (days === 1) return "Yesterday";
+        return `${days}d ago`;
+    };
+
+    const handleSaveJob = (e) => {
+        e.stopPropagation();
+        setIsSaved(!isSaved);
+        toast.success(!isSaved ? "Job saved to bookmarks!" : "Job removed from bookmarks");
+    };
+
     return (
-        <div className='p-5 rounded-md shadow-xl bg-white border border-gray-100'>
-            <div className='flex items-center justify-between'>
-                <p className='text-sm text-gray-500'>
-                    {daysagofunction(job?.createdAt) === 0
-                        ? "Today"
-                        : `${daysagofunction(job?.createdAt)} days ago`}
-                </p>
-                <Button variant="outline" className='rounded-full' size="icon"><Bookmark /></Button>
+        <div className="group p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-indigo-300 shadow-xs hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 flex flex-col justify-between h-full">
+            <div>
+                {/* Top bar: Posted time & bookmark */}
+                <div className="flex items-center justify-between mb-3">
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100">
+                        <Clock className="h-3 w-3" />
+                        {daysAgoFunction(job?.createdAt)}
+                    </span>
+                    <Button 
+                        onClick={handleSaveJob} 
+                        variant="ghost" 
+                        size="icon" 
+                        className={`h-8 w-8 rounded-full ${isSaved ? "text-indigo-600 bg-indigo-50" : "text-slate-400 hover:text-indigo-600 hover:bg-slate-50"}`}
+                    >
+                        <Bookmark className={`h-4 w-4 ${isSaved ? "fill-indigo-600" : ""}`} />
+                    </Button>
+                </div>
 
-            </div>
-
-            <div className='flex items-center gap-2 my-2'>
-                <Button className="p-6" variant="outline" size="icon">
-                    <Avatar>
-                        <AvatarImage src={job?.company?.logo}
-                        />
+                {/* Company info */}
+                <div className="flex items-center gap-3 mb-3">
+                    <Avatar className="h-11 w-11 rounded-xl border border-slate-100 bg-slate-50">
+                        <AvatarImage src={job?.company?.logo} alt={job?.company?.name} />
+                        <AvatarFallback className="rounded-xl bg-indigo-50 text-indigo-700 font-bold text-sm">
+                            {job?.company?.name?.charAt(0)?.toUpperCase() || "C"}
+                        </AvatarFallback>
                     </Avatar>
+                    <div className="overflow-hidden">
+                        <h3 className="font-semibold text-slate-800 text-sm truncate group-hover:text-indigo-600 transition-colors">
+                            {job?.company?.name || "Company"}
+                        </h3>
+                        <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                            <MapPin className="h-3 w-3 text-slate-400" /> {job?.location || "India"}
+                        </p>
+                    </div>
+                </div>
 
-                </Button>
-            </div>
-            <div>
-                <h1 className='font-medium text-lg'>{job?.company?.name}</h1>
-                <p className='text-sm text-gray-500'>India</p>
-            </div>
-
-            <div>
-                <h1 className='font-bold text-lg my-2
-                    '>{job?.title}</h1>
-                <p className='text-sm text-gray-600'>{job?.description}</p>
-            </div>
-
-
-            <div className='flex items-center gap-2 mt-4'>
-                <Badge className='text-blue-700 font-bold' variant='ghost'>{job?.position}</Badge>
-                <Badge className='text-[#f83002] font-bold' variant='ghost'>{job?.jobtype}</Badge>
-                <Badge className='text-[#7209b7] font-bold' variant='ghost'>{job?.salary}LPA</Badge>
-            </div>
-
-            <div className='flex items gap-4 mt-4'>
-                <Button onClick={() => navigate(`/description/${job?._id}`)} variant="outline">
-                    Details
-                </Button>
-
-                <Button className="bg-[#7209b7]">Save for later</Button>
+                {/* Job Title & Description */}
+                <div>
+                    <h2 className="font-bold text-slate-900 text-base mb-1.5 line-clamp-1 group-hover:text-indigo-600 transition-colors">
+                        {job?.title}
+                    </h2>
+                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                        {job?.description}
+                    </p>
+                </div>
             </div>
 
+            {/* Tags & Action Buttons */}
+            <div className="pt-4 mt-4 border-t border-slate-100">
+                <div className="flex flex-wrap items-center gap-1.5 mb-4">
+                    <Badge variant="secondary" className="text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-none">
+                        {job?.position || 1} Positions
+                    </Badge>
+                    <Badge variant="secondary" className="text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 border-none">
+                        {job?.jobtype || "Full Time"}
+                    </Badge>
+                    <Badge variant="secondary" className="text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-none">
+                        {job?.salary} LPA
+                    </Badge>
+                </div>
 
-
-
-
-
-
-
+                <div className="flex items-center gap-2">
+                    <Button 
+                        onClick={() => navigate(`/description/${job?._id}`)} 
+                        className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs shadow-indigo-600/20"
+                    >
+                        View Details <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
+                    </Button>
+                    <Button 
+                        onClick={handleSaveJob} 
+                        variant="outline" 
+                        className="rounded-xl text-xs font-semibold border-slate-200 text-slate-700 hover:bg-slate-50"
+                    >
+                        {isSaved ? "Saved" : "Save"}
+                    </Button>
+                </div>
+            </div>
         </div>
-    )
-}
+    );
+};
 
-export default job
+export default Job;
+

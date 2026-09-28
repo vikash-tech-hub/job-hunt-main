@@ -2,10 +2,8 @@ import e from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import User from '../models/user.model.js';
-import { get } from "http";
 import cloudinary from "../utils/cloudinary.js";
 import getDataUri from "../utils/datauri.js";
-import { profile } from "console";
 
 // REGISTER
 export const register = async (req, res) => {
@@ -14,22 +12,30 @@ export const register = async (req, res) => {
 
     if (!fullname || !email || !password || !role || !phoneNumber) {
       return res.status(400).json({
-        message: "Some thing is missing",
+        message: "Please fill in all required fields",
         success: false,
       });
     }
-    const file = req.file;
-    const fileuri = getDataUri(file);
-    const cloudResponse = await cloudinary.uploader.upload(fileuri.content);
 
-
-
-    const user = await User.findOne({ email });
-    if (user) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
       return res.status(400).json({
-        message: "User already exists",
+        message: "User with this email already exists",
         success: false,
       });
+    }
+
+    let profilePhotoUrl = "";
+    if (req.file) {
+      try {
+        const fileuri = getDataUri(req.file);
+        if (fileuri?.content) {
+          const cloudResponse = await cloudinary.uploader.upload(fileuri.content);
+          profilePhotoUrl = cloudResponse?.secure_url || "";
+        }
+      } catch (uploadErr) {
+        console.warn("Cloudinary upload failed (continuing without avatar):", uploadErr.message);
+      }
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -40,19 +46,18 @@ export const register = async (req, res) => {
       role,
       phoneNumber,
       profile: {
-        profilephoto: cloudResponse.secure_url,
+        profilephoto: profilePhotoUrl,
       }
-
     });
 
     return res.status(201).json({
-      message: "User created successfully",
+      message: "Account created successfully",
       success: true,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Register Error:", error);
     return res.status(500).json({
-      message: "Server error",
+      message: error?.message || "Server error occurred during registration",
       success: false,
     });
   }
@@ -65,7 +70,7 @@ export const login = async (req, res) => {
 
     if (!email || !password || !role) {
       return res.status(400).json({
-        message: "Some thing is missing",
+        message: "Please provide email, password, and role",
         success: false,
       });
     }
@@ -88,7 +93,7 @@ export const login = async (req, res) => {
 
     if (role !== user.role) {
       return res.status(400).json({
-        message: "Account does not exist with current role",
+        message: `Account does not exist with ${role} role`,
         success: false,
       });
     }
@@ -110,23 +115,25 @@ export const login = async (req, res) => {
       profile: user.profile,
     };
 
+    const isProduction = process.env.NODE_ENV === "production";
+
     return res
       .status(200)
       .cookie("token", token, {
         maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day
-        httpOnly: true,                   // prevents JS access to cookie
-        sameSite: "none",                 // <- important for cross-site cookies
-        secure: true                      // <- important if your frontend is https
+        httpOnly: true,
+        sameSite: isProduction ? "none" : "lax",
+        secure: isProduction,
       })
       .json({
-        message: `Welcome back ${user.fullname}`,
+        message: `Welcome back, ${user.fullname}!`,
         user: userData,
         success: true,
       });
   } catch (error) {
-    console.error(error);
+    console.error("Login Error:", error);
     return res.status(500).json({
-      message: "Server error",
+      message: "Server error occurred during login",
       success: false,
     });
   }
@@ -135,19 +142,25 @@ export const login = async (req, res) => {
 // LOGOUT
 export const logout = async (req, res) => {
   try {
+    const isProduction = process.env.NODE_ENV === "production";
     return res
       .status(200)
       .cookie("token", "", {
         maxAge: 0,
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: isProduction ? "none" : "lax",
+        secure: isProduction,
       })
       .json({
         message: "Logged out successfully",
         success: true,
       });
   } catch (error) {
-    console.error(error);
+    console.error("Logout Error:", error);
+    return res.status(500).json({
+      message: "Server error occurred during logout",
+      success: false,
+    });
   }
 };
 
@@ -155,27 +168,28 @@ export const logout = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const { fullname, email, phoneNumber, bio, skills } = req.body;
-    console.log(fullname, email, phoneNumber, bio, skills)
     const file = req.file;
-    const fileuri = getDataUri(file);
-    // console.log("📂 File received:", file);
-    // console.log("📂 File URI:", fileuri);
+    let cloudResponse = null;
 
-    const cloudResponse = await cloudinary.uploader.upload(fileuri.content, {
-      resource_type: "raw"
-    });
-
-    // console.log("✅ Cloudinary Response:", cloudResponse);
-
+    if (file) {
+      try {
+        const fileuri = getDataUri(file);
+        if (fileuri?.content) {
+          cloudResponse = await cloudinary.uploader.upload(fileuri.content, {
+            resource_type: "raw"
+          });
+        }
+      } catch (uploadErr) {
+        console.warn("Cloudinary upload failed in updateProfile:", uploadErr.message);
+      }
+    }
 
     let skillsArray;
     if (skills) {
-      skillsArray = skills.split(",");
+      skillsArray = Array.isArray(skills) ? skills : skills.split(",").map(s => s.trim()).filter(Boolean);
     }
 
-
     const userId = req.id;
-
     let user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
@@ -187,16 +201,9 @@ export const updateProfile = async (req, res) => {
     if (fullname) user.fullname = fullname;
     if (email) user.email = email;
     if (phoneNumber) user.phoneNumber = phoneNumber;
-    if (skills) user.profile.skills = skillsArray;
+    if (skillsArray) user.profile.skills = skillsArray;
     if (bio) user.profile.bio = bio;
 
-
-
-
-
-
-
-    // Resume upload logic comes later here
     if (cloudResponse) {
       user.profile.resume = cloudResponse.secure_url;
       user.profile.resumeoriginalname = file.originalname;
@@ -219,6 +226,10 @@ export const updateProfile = async (req, res) => {
       success: true,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Update Profile Error:", error);
+    return res.status(500).json({
+      message: "Server error occurred during profile update",
+      success: false,
+    });
   }
 };
