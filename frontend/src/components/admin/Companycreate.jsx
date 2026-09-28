@@ -25,8 +25,9 @@ const Companycreate = () => {
     }
     try {
       setLoading(true);
+      const baseUrl = import.meta.env.VITE_BASE_ORIGIN_URL || '';
       const res = await axios.post(
-        `${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/company/register`,
+        `${baseUrl}/api/v1/company/register`,
         { companyName: companyname },
         {
           headers: { 'Content-Type': 'application/json' },

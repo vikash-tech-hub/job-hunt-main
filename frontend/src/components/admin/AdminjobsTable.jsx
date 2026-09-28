@@ -51,8 +51,9 @@ const AdminjobsTable = () => {
     if (!isConfirmed) return;
 
     try {
+      const baseUrl = import.meta.env.VITE_BASE_ORIGIN_URL || '';
       const res = await axios.delete(
-        `${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/job/delete/${jobId}`,
+        `${baseUrl}/api/v1/job/delete/${jobId}`,
         { withCredentials: true }
       );
       if (res.data.success) {

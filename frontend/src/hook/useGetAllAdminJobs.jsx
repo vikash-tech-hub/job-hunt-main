@@ -9,7 +9,8 @@ const useGetAllAdminJobs = () => {
     useEffect(()=>{
         const fetchAllAdminJobs = async () => {
             try {
-                const res = await axios.get(`${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/job/getadminjob`,{withCredentials:true});
+                const baseUrl = import.meta.env.VITE_BASE_ORIGIN_URL || '';
+                const res = await axios.get(`${baseUrl}/api/v1/job/getadminjob`,{withCredentials:true});
                 if(res.data.success){
                     dispatch(setAllAdminJobs(res.data.jobs));
                 }

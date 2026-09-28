@@ -47,8 +47,9 @@ const PostJob = () => {
         }
         try {
             setLoading(true);
+            const baseUrl = import.meta.env.VITE_BASE_ORIGIN_URL || '';
             const res = await axios.post(
-                `${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/job/post`,
+                `${baseUrl}/api/v1/job/post`,
                 input,
                 {
                     headers: { 'Content-Type': 'application/json' },

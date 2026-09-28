@@ -33,7 +33,8 @@ const Navbar = () => {
     if (!isConfirmed) return;
 
     try {
-      const res = await axios.get(`${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/user/logout`, {
+      const baseUrl = import.meta.env.VITE_BASE_ORIGIN_URL || '';
+      const res = await axios.get(`${baseUrl}/api/v1/user/logout`, {
         withCredentials: true,
       });
       if (res.data.success) {

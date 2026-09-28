@@ -18,8 +18,9 @@ const Applicants = () => {
     useEffect(() => {
         const fetchAllApplicants = async () => {
             try {
+                const baseUrl = import.meta.env.VITE_BASE_ORIGIN_URL || '';
                 const res = await axios.get(
-                    `${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/application/${params.id}/applicants`,
+                    `${baseUrl}/api/v1/application/${params.id}/applicants`,
                     { withCredentials: true }
                 );
                 if (res.data?.success && res.data?.job?.applications) {

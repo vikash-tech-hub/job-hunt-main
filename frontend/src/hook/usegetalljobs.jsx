@@ -9,7 +9,8 @@ const usegetallJobs = () => {
     useEffect(()=>{
         const fetchAllJobs = async () => {
             try {
-                const res = await axios.get(`${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/job/get?keywords=${searchedQuery}`,{withCredentials:true});
+                const baseUrl = import.meta.env.VITE_BASE_ORIGIN_URL || '';
+                const res = await axios.get(`${baseUrl}/api/v1/job/get?keywords=${searchedQuery}`,{withCredentials:true});
                 if(res.data.success){
                     dispatch(setAllJobs(res.data.jobs));
                 }

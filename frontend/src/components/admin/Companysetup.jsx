@@ -56,8 +56,9 @@ const Companysetup = () => {
 
     try {
       setLoading(true);
+      const baseUrl = import.meta.env.VITE_BASE_ORIGIN_URL || '';
       const res = await axios.put(
-        `${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/company/update/${params.id}`,
+        `${baseUrl}/api/v1/company/update/${params.id}`,
         formData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },

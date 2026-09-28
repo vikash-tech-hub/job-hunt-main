@@ -9,8 +9,9 @@ const useGetAllCompanies = () => {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
+        const baseUrl = import.meta.env.VITE_BASE_ORIGIN_URL || '';
         const res = await axios.get(
-          `${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/company/get`,
+          `${baseUrl}/api/v1/company/get`,
           { withCredentials: true }
         )
         if (res.data.success) {

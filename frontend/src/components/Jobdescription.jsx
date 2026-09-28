@@ -62,8 +62,9 @@ const Jobdescription = () => {
 
     try {
       setLoading(true);
+      const baseUrl = import.meta.env.VITE_BASE_ORIGIN_URL || '';
       const res = await axios.get(
-        `${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/application/apply/${id}`,
+        `${baseUrl}/api/v1/application/apply/${id}`,
         { withCredentials: true }
       );
       if (res.data.success) {
@@ -89,8 +90,9 @@ const Jobdescription = () => {
   useEffect(() => {
     const fetchSingleJob = async () => {
       try {
+        const baseUrl = import.meta.env.VITE_BASE_ORIGIN_URL || '';
         const res = await axios.get(
-          `${import.meta.env.VITE_BASE_ORIGIN_URL}/api/v1/job/get/${id}`,
+          `${baseUrl}/api/v1/job/get/${id}`,
           { withCredentials: true }
         );
         if (res.data.success) {
