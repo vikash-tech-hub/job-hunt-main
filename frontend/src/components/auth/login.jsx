@@ -8,7 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { setLoading, setUser } from "@/redux/authslice";
+import { setLoading as setAuthLoading, setUser } from "@/redux/authslice";
 import { Loader2, Mail, Lock, Eye, EyeOff, UserCheck, Briefcase, Sparkles } from "lucide-react";
 
 const Login = () => {
@@ -18,7 +18,8 @@ const Login = () => {
     role: "student",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const { loading, user } = useSelector((store) => store.auth);
+  const [loading, setLoading] = useState(false);
+  const { user } = useSelector((store) => store.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -37,7 +38,7 @@ const Login = () => {
     }
 
     try {
-      dispatch(setLoading(true));
+      setLoading(true);
       const baseUrl = import.meta.env.VITE_BASE_ORIGIN_URL || '';
       const res = await axios.post(
         `${baseUrl}/api/v1/user/login`,
@@ -63,11 +64,12 @@ const Login = () => {
         toast.error(error.message || "Invalid credentials or network error");
       }
     } finally {
-      dispatch(setLoading(false));
+      setLoading(false);
     }
   };
 
   useEffect(() => {
+    dispatch(setAuthLoading(false));
     if (user) {
       if (user.role === "recruiter") {
         navigate("/admin/companies");
@@ -75,7 +77,7 @@ const Login = () => {
         navigate("/");
       }
     }
-  }, [user, navigate]);
+  }, [user, navigate, dispatch]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50/50">

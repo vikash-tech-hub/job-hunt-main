@@ -21,7 +21,8 @@ const Signup = () => {
     file: null,
   });
   const [showPassword, setShowPassword] = useState(false);
-  const { loading, user } = useSelector((store) => store.auth);
+  const [loading, setLoading] = useState(false);
+  const { user } = useSelector((store) => store.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -57,7 +58,7 @@ const Signup = () => {
     }
 
     try {
-      dispatch(setLoading(true));
+      setLoading(true);
       const baseUrl = import.meta.env.VITE_BASE_ORIGIN_URL || '';
       const res = await axios.post(
         `${baseUrl}/api/v1/user/register`,
@@ -80,7 +81,7 @@ const Signup = () => {
         toast.error(error.message || "Registration failed");
       }
     } finally {
-      dispatch(setLoading(false));
+      setLoading(false);
     }
   };
 
