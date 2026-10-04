@@ -9,13 +9,23 @@ import companyRoutes from './routes/company.route.js';
 import jobRoutes from './routes/job.route.js';
 import applicationRoutes from './routes/application.route.js';
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '.env') });
 dotenv.config();
 
 const app = express();
 
 // Ensure DB connection for every serverless invocation
 app.use(async (req, res, next) => {
-  await connectDB();
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error("DB connection middleware error:", err);
+  }
   next();
 });
 
@@ -66,8 +76,8 @@ app.use('/api/v1/application', applicationRoutes);
 export default app;
 
 // Local Development Server Listener
-const PORT = process.env.PORT || 8000;
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+  const PORT = process.env.PORT || 8000;
   app.listen(PORT, async () => {
     await connectDB();
     console.log(`Server is running on port ${PORT}`);
