@@ -21,12 +21,21 @@ const app = express();
 
 // Ensure DB connection for every serverless invocation
 app.use(async (req, res, next) => {
+  // Allow root health check to respond even if DB is down
+  if (req.path === '/' || req.path === '/api' || req.path === '/api/') {
+    return next();
+  }
   try {
     await connectDB();
+    next();
   } catch (err) {
-    console.error("DB connection middleware error:", err);
+    console.error("DB connection middleware error:", err.message);
+    return res.status(500).json({
+      message: "Database connection failed",
+      error: err.message,
+      success: false
+    });
   }
-  next();
 });
 
 // Middleware
